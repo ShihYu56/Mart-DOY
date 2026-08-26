@@ -1,0 +1,405 @@
+ 
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>全聯蔬果太陽日解碼器</title>
+    
+    <!-- PWA 與行動裝置設定 -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <style>
+        /* 主題變數定義 */
+        :root.dark {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-sub: #a0a0a0;
+            --border-color: #333333;
+            --card-bg: #181818;
+            --input-bg: #2a2a2a;
+            --input-text: #ffffff;
+            --btn-bg: #2563eb;
+            --btn-hover: #1d4ed8;
+            --result-text: #f8fafc;
+            --switcher-bg: #2a2a2a;
+            --btn-active-bg: #2563eb;
+            --btn-active-text: #ffffff;
+        }
+        :root.light {
+            --bg-color: #f5f7fa;
+            --container-bg: #ffffff;
+            --text-main: #333333;
+            --text-sub: #94a3b8;
+            --border-color: #e2e8f0;
+            --card-bg: #f8fafc;
+            --input-bg: #ffffff;
+            --input-text: #000000;
+            --btn-bg: #2563eb;
+            --btn-hover: #1d4ed8;
+            --result-text: #0f172a;
+            --switcher-bg: #f1f5f9;
+            --btn-active-bg: #2563eb;
+            --btn-active-text: #ffffff;
+        }
+        :root {
+            --bg-color: #f5f7fa;
+            --container-bg: #ffffff;
+            --text-main: #333333;
+            --text-sub: #94a3b8;
+            --border-color: #e2e8f0;
+            --card-bg: #f8fafc;
+            --input-bg: #ffffff;
+            --input-text: #000000;
+            --btn-bg: #2563eb;
+            --btn-hover: #1d4ed8;
+            --result-text: #0f172a;
+            --switcher-bg: #f1f5f9;
+            --btn-active-bg: #2563eb;
+            --btn-active-text: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            transition: background-color 0.25s, color 0.25s;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--container-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+            transition: background-color 0.25s;
+        }
+        h2 {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #1e3a8a;
+            margin-bottom: 12px;
+        }
+
+        /* 外觀模式切換按鈕區塊 */
+        .theme-switcher {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: var(--switcher-bg);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .theme-btn {
+            flex: 1;
+            padding: 6px 2px;
+            font-size: 0.75rem;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-main);
+            border-radius: 7px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .theme-btn.active {
+            background: var(--btn-active-bg);
+            color: var(--btn-active-text);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        /* 今日狀態欄 (藍框) */
+        .today-banner {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .today-banner .title { font-size: 0.9rem; opacity: 0.9; }
+        .today-banner .number { 
+            font-size: 2.5rem; 
+            font-weight: bold; 
+            margin: 2px 0;
+            color: #fef08a;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .today-banner .date { font-size: 0.85rem; opacity: 0.85; margin-bottom: 12px; }
+        
+        /* 下架日區塊 */
+        .expiry-box {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .expiry-title {
+            font-size: 0.85rem;
+            opacity: 0.95;
+            white-space: nowrap;
+        }
+        .expiry-number {
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: #ff4d4d;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 功能區塊 */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: background-color 0.25s, border-color 0.25s;
+        }
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            background-color: var(--input-bg);
+            color: var(--input-text);
+        }
+        input:focus {
+            border-color: #3b82f6;
+        }
+        button.action-btn {
+            background-color: var(--btn-bg);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button.action-btn:hover { background-color: var(--btn-hover); }
+        
+        /* 結果顯示 */
+        .result-box {
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: var(--result-text);
+            font-weight: 500;
+            min-height: 20px;
+        }
+        .highlight {
+            color: #dc2626;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* 最底下版本資訊 */
+        .app-version {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-top: 12px;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h2>🛒 蔬果太陽日計算器</h2>
+
+    <!-- 外觀模式切換按鈕區塊 -->
+    <div class="theme-switcher">
+        <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 暗黑模式</button>
+        <button id="themeLight" class="theme-btn" onclick="setTheme('light')">☀️ 正常模式(白色)</button>
+        <button id="themeSystem" class="theme-btn" onclick="setTheme('system')">🔄 系統預設</button>
+    </div>
+
+    <!-- 1. 顯示目前今日太陽日與下架日 -->
+    <div class="today-banner">
+        <div class="title">今天是 2026 年第</div>
+        <div class="number" id="current-solar-day">--</div>
+        <div class="title">天 (太陽日)</div>
+        <div class="date" id="current-date-str">今日日期: ----/--/--</div>
+        
+        <!-- 下架日區塊 -->
+        <div class="expiry-box">
+            <div class="expiry-title">⚠️ 今日對應下架日 (-7日)</div>
+            <div class="expiry-number" id="expiry-solar-day">第 -- 天</div>
+        </div>
+    </div>
+
+    <!-- 2. 輸入日期顯示太陽日 -->
+    <div class="card">
+        <div class="card-title">📅 輸入日期 ➔ 查太陽日</div>
+        <div class="input-group">
+            <input type="date" id="date-input">
+            <button class="action-btn" onclick="convertDateToSolar()">計算</button>
+        </div>
+        <div class="result-box" id="date-to-solar-result"></div>
+    </div>
+
+    <!-- 3. 輸入太陽日顯示日期 -->
+    <div class="card">
+        <div class="card-title">🔢 輸入太陽日 ➔ 反推日期</div>
+        <div class="input-group">
+            <input type="number" id="solar-input" placeholder="請輸入 1 ~ 365" min="1" max="365">
+            <button class="action-btn" onclick="convertSolarToDate()">反推</button>
+        </div>
+        <div class="result-box" id="solar-to-date-result"></div>
+    </div>
+
+    <!-- 4. 最底下版本顯示 -->
+    <div class="app-version">太陽日 Ver 2.1.1</div>
+</div>
+
+<script>
+    /* 主題切換邏輯 */
+    function setTheme(mode) {
+        localStorage.setItem("solar_theme_mode", mode);
+        applyTheme(mode);
+    }
+
+    function applyTheme(mode) {
+        const root = document.documentElement;
+        root.classList.remove('dark', 'light');
+        
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+
+        if (mode === 'dark') {
+            root.classList.add('dark');
+            document.getElementById('themeDark').classList.add('active');
+        } else if (mode === 'light') {
+            root.classList.add('light');
+            document.getElementById('themeLight').classList.add('active');
+        } else {
+            document.getElementById('themeSystem').classList.add('active');
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                root.classList.add('dark');
+            } else {
+                root.classList.add('light');
+            }
+        }
+    }
+
+    function loadTheme() {
+        const savedTheme = localStorage.getItem("solar_theme_mode") || 'system';
+        applyTheme(savedTheme);
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if ((localStorage.getItem("solar_theme_mode") || 'system') === 'system') {
+            applyTheme('system');
+        }
+    });
+
+    // 取得指定日期在當年度的太陽日（積日）
+    function getSolarDay(date) {
+        const start = new Date(date.getFullYear(), 0, 1);
+        const diff = date - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.floor(diff / oneDay) + 1;
+    }
+
+    // 格式化日期為 YYYY-MM-DD
+    function formatDate(date) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // 初始化頁面
+    window.onload = function() {
+        loadTheme();
+
+        const today = new Date();
+        const todaySolarDay = getSolarDay(today);
+        
+        let expirySolarDay = todaySolarDay - 7;
+        if (expirySolarDay <= 0) {
+            expirySolarDay += 365;
+        }
+
+        document.getElementById('current-solar-day').innerText = todaySolarDay;
+        document.getElementById('current-date-str').innerText = `今日日期: ${formatDate(today)}`;
+        document.getElementById('expiry-solar-day').innerText = `第 ${expirySolarDay} 天`;
+        
+        document.getElementById('date-input').value = formatDate(today);
+    };
+
+    // 功能一：日期 ➔ 太陽日
+    function convertDateToSolar() {
+        const inputVal = document.getElementById('date-input').value;
+        if (!inputVal) {
+            document.getElementById('date-to-solar-result').innerText = "請選擇日期";
+            return;
+        }
+        const targetDate = new Date(inputVal);
+        const solarDay = getSolarDay(targetDate);
+        const year = targetDate.getFullYear();
+        
+        let targetExpiry = solarDay - 7;
+        if (targetExpiry <= 0) targetExpiry += 365;
+
+        document.getElementById('date-to-solar-result').innerHTML = 
+            `${year}年的這天是第 <span class="highlight">${solarDay}</span> 天 (下架日: 第 ${targetExpiry} 天)`;
+    }
+
+    // 功能二：太陽日 ➔ 日期
+    function convertSolarToDate() {
+        const solarVal = parseInt(document.getElementById('solar-input').value);
+        if (isNaN(solarVal) || solarVal < 1 || solarVal > 365) {
+            document.getElementById('solar-to-date-result').innerText = "請輸入 1 到 365 之間的數字";
+            return;
+        }
+        
+        const year = 2026;
+        const targetDate = new Date(year, 0, solarVal);
+        
+        document.getElementById('solar-to-date-result').innerHTML = 
+            `第 ${solarVal} 天對應日期為: <span class="highlight">${formatDate(targetDate)}</span>`;
+    }
+</script>
+
+</body>
+</html>
