@@ -1,16 +1,16 @@
- 
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>蔬果太陽日小工具</title>
+    <title>全聯蔬果太陽日解碼器</title>
     
     <!-- PWA 與行動裝置設定 -->
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="theme-color" content="#1e40af">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#121212">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
@@ -31,6 +31,7 @@
             --switcher-bg: #2a2a2a;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
+            --title-color: #60a5fa; /* 暗黑模式：亮天藍色 */
         }
         :root.light {
             --bg-color: #f5f7fa;
@@ -47,6 +48,7 @@
             --switcher-bg: #f1f5f9;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
+            --title-color: #1e3a8a; /* 正常模式：深藍色 */
         }
         :root {
             --bg-color: #f5f7fa;
@@ -63,6 +65,7 @@
             --switcher-bg: #f1f5f9;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
+            --title-color: #1e3a8a;
         }
 
         * {
@@ -91,7 +94,7 @@
         h2 {
             text-align: center;
             font-size: 1.3rem;
-            color: #1e3a8a;
+            color: var(--title-color); /* 自動隨主題套用色彩 */
             margin-bottom: 12px;
         }
 
