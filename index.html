@@ -1,3 +1,4 @@
+ 
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -9,10 +10,14 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- iOS 專用優化設定 -->
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <meta name="apple-mobile-web-app-title" content="太陽日">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#121212">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
 
     <style>
         /* 主題變數定義 */
@@ -31,7 +36,8 @@
             --switcher-bg: #2a2a2a;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
-            --title-color: #60a5fa; /* 暗黑模式：亮天藍色 */
+            --title-color: #60a5fa; /* 深色模式：亮天藍色 */
+            --link-color: #60a5fa;
         }
         :root.light {
             --bg-color: #f5f7fa;
@@ -49,6 +55,7 @@
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
             --title-color: #1e3a8a; /* 正常模式：深藍色 */
+            --link-color: #2563eb;
         }
         :root {
             --bg-color: #f5f7fa;
@@ -66,6 +73,7 @@
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
             --title-color: #1e3a8a;
+            --link-color: #2563eb;
         }
 
         * {
@@ -234,14 +242,23 @@
             font-size: 1.1rem;
         }
 
-        /* 最底下版本資訊 */
-        .app-version {
+        /* 最底下版本與開發者資訊 */
+        .app-footer {
             text-align: center;
             font-size: 0.75rem;
             color: var(--text-sub);
             margin-top: 12px;
             margin-bottom: 4px;
             letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+        .app-footer a {
+            color: var(--link-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .app-footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -252,7 +269,7 @@
 
     <!-- 外觀模式切換按鈕區塊 -->
     <div class="theme-switcher">
-        <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 暗黑模式</button>
+        <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 深色模式</button>
         <button id="themeLight" class="theme-btn" onclick="setTheme('light')">☀️ 正常模式(白色)</button>
         <button id="themeSystem" class="theme-btn" onclick="setTheme('system')">🔄 系統預設</button>
     </div>
@@ -291,8 +308,11 @@
         <div class="result-box" id="solar-to-date-result"></div>
     </div>
 
-    <!-- 4. 最底下版本顯示 -->
-    <div class="app-version">太陽日 Ver 2.1.1</div>
+    <!-- 4. 最底下版本與開發者資訊 -->
+    <div class="app-footer">
+        <div>太陽日 Ver 2.2.1</div>
+        <div>開發者: <a href="https://github.com/ShihYu56/Mart-DOY" target="_blank" rel="noopener noreferrer">GitHub</a>(<a href="https://shihyu56.github.io/Mart-DOY/" target="_blank" rel="noopener noreferrer">ShihYu56</a>) & Gemini</div>
+    </div>
 </div>
 
 <script>
