@@ -36,7 +36,7 @@
             --switcher-bg: #2a2a2a;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
-            --title-color: #60a5fa; /* 深色模式：亮天藍色 */
+            --title-color: #60a5fa; /* 暗黑模式：亮天藍色 */
             --link-color: #60a5fa;
         }
         :root.light {
@@ -265,18 +265,18 @@
 <body>
 
 <div class="app-container">
-    <h2>🛒 蔬果太陽日計算器</h2>
+    <h2>🛒 蔬果太陽日解碼器</h2>
 
     <!-- 外觀模式切換按鈕區塊 -->
     <div class="theme-switcher">
-        <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 深色模式</button>
+        <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 暗黑模式</button>
         <button id="themeLight" class="theme-btn" onclick="setTheme('light')">☀️ 正常模式(白色)</button>
         <button id="themeSystem" class="theme-btn" onclick="setTheme('system')">🔄 系統預設</button>
     </div>
 
     <!-- 1. 顯示目前今日太陽日與下架日 -->
     <div class="today-banner">
-        <div class="title">今天是 2026 年第</div>
+        <div class="title" id="today-banner-title">今天是 ---- 年第</div>
         <div class="number" id="current-solar-day">--</div>
         <div class="title">天 (太陽日)</div>
         <div class="date" id="current-date-str">今日日期: ----/--/--</div>
@@ -302,7 +302,7 @@
     <div class="card">
         <div class="card-title">🔢 輸入太陽日 ➔ 反推日期</div>
         <div class="input-group">
-            <input type="number" id="solar-input" placeholder="請輸入 1 ~ 365" min="1" max="365">
+            <input type="number" id="solar-input" placeholder="請輸入 1 ~ 366" min="1" max="366">
             <button class="action-btn" onclick="convertSolarToDate()">反推</button>
         </div>
         <div class="result-box" id="solar-to-date-result"></div>
@@ -310,7 +310,7 @@
 
     <!-- 4. 最底下版本與開發者資訊 -->
     <div class="app-footer">
-        <div>太陽日 Ver 2.2.1</div>
+        <div>太陽日 Ver 2.2.2</div>
         <div>開發者: <a href="https://github.com/ShihYu56/Mart-DOY" target="_blank" rel="noopener noreferrer">GitHub</a>(<a href="https://shihyu56.github.io/Mart-DOY/" target="_blank" rel="noopener noreferrer">ShihYu56</a>) & Gemini</div>
     </div>
 </div>
@@ -355,6 +355,11 @@
         }
     });
 
+    // 判斷是否為閏年
+    function isLeapYear(year) {
+        return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
     // 取得指定日期在當年度的太陽日（積日）
     function getSolarDay(date) {
         const start = new Date(date.getFullYear(), 0, 1);
@@ -376,13 +381,16 @@
         loadTheme();
 
         const today = new Date();
+        const year = today.getFullYear();
+        const totalDays = isLeapYear(year) ? 366 : 365;
         const todaySolarDay = getSolarDay(today);
         
         let expirySolarDay = todaySolarDay - 7;
         if (expirySolarDay <= 0) {
-            expirySolarDay += 365;
+            expirySolarDay += totalDays;
         }
 
+        document.getElementById('today-banner-title').innerText = `今天是 ${year} 年第`;
         document.getElementById('current-solar-day').innerText = todaySolarDay;
         document.getElementById('current-date-str').innerText = `今日日期: ${formatDate(today)}`;
         document.getElementById('expiry-solar-day').innerText = `第 ${expirySolarDay} 天`;
@@ -400,9 +408,10 @@
         const targetDate = new Date(inputVal);
         const solarDay = getSolarDay(targetDate);
         const year = targetDate.getFullYear();
+        const totalDays = isLeapYear(year) ? 366 : 365;
         
         let targetExpiry = solarDay - 7;
-        if (targetExpiry <= 0) targetExpiry += 365;
+        if (targetExpiry <= 0) targetExpiry += totalDays;
 
         document.getElementById('date-to-solar-result').innerHTML = 
             `${year}年的這天是第 <span class="highlight">${solarDay}</span> 天 (下架日: 第 ${targetExpiry} 天)`;
@@ -411,16 +420,18 @@
     // 功能二：太陽日 ➔ 日期
     function convertSolarToDate() {
         const solarVal = parseInt(document.getElementById('solar-input').value);
-        if (isNaN(solarVal) || solarVal < 1 || solarVal > 365) {
-            document.getElementById('solar-to-date-result').innerText = "請輸入 1 到 365 之間的數字";
+        const currentYear = new Date().getFullYear();
+        const maxDays = isLeapYear(currentYear) ? 366 : 365;
+
+        if (isNaN(solarVal) || solarVal < 1 || solarVal > maxDays) {
+            document.getElementById('solar-to-date-result').innerText = `請輸入 1 到 ${maxDays} 之間的數字`;
             return;
         }
         
-        const year = 2026;
-        const targetDate = new Date(year, 0, solarVal);
+        const targetDate = new Date(currentYear, 0, solarVal);
         
         document.getElementById('solar-to-date-result').innerHTML = 
-            `第 ${solarVal} 天對應日期為: <span class="highlight">${formatDate(targetDate)}</span>`;
+            `${currentYear} 年第 ${solarVal} 天對應日期為: <span class="highlight">${formatDate(targetDate)}</span>`;
     }
 </script>
 
