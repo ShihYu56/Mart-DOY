@@ -283,6 +283,11 @@
             color: var(--result-text);
             font-weight: 500;
             min-height: 20px;
+            line-height: 1.5;
+        }
+        .result-subtext {
+            display: block;
+            margin-top: 4px;
         }
         .highlight {
             color: #dc2626;
@@ -432,7 +437,7 @@
 
     <!-- 4. 最底下版本與開發者資訊 -->
     <div class="app-footer">
-        <div>太陽日 Ver 2.2.2 professional</div>
+        <div>太陽日 Ver 2.2.2.2 professional</div>
         <div>開發者: <a href="https://github.com/ShihYu56/Mart-DOY" target="_blank" rel="noopener noreferrer">GitHub</a>(<a href="https://shihyu56.github.io/Mart-DOY/" target="_blank" rel="noopener noreferrer">ShihYu56</a>) & Gemini</div>
     </div>
 </div>
@@ -630,7 +635,8 @@
         if (targetExpiry <= 0) targetExpiry += totalDays;
 
         document.getElementById('date-to-solar-result').innerHTML = 
-            `${year}年的這天是第 <span class="highlight">${solarDay}</span> 天 (下架日: 第 ${targetExpiry} 天)`;
+            `${year}年的這天是第 <span class="highlight">${solarDay}</span> 天` +
+            `<span class="result-subtext">(下架日: 第 ${targetExpiry} 天)</span>`;
     }
 
     // 功能二：太陽日 ➔ 日期
@@ -679,7 +685,8 @@
         const targetDate = new Date(currentYear, 0, solarVal);
         
         document.getElementById('solar-to-date-result').innerHTML = 
-            `${currentYear} 年第 ${solarVal} 天對應日期為: <span class="highlight">${formatDate(targetDate)}</span>`;
+            `${currentYear} 年第 ${solarVal} 天對應日期為:` +
+            `<span class="result-subtext"><span class="highlight">${formatDate(targetDate)}</span></span>`;
     }
 </script>
 
