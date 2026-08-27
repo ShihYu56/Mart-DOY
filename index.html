@@ -36,8 +36,9 @@
             --switcher-bg: #2a2a2a;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
-            --title-color: #60a5fa; /* 暗黑模式：亮天藍色 */
+            --title-color: #60a5fa; /* 深色模式：亮天藍色 */
             --link-color: #60a5fa;
+            --modal-bg: #2a2a2a;
         }
         :root.light {
             --bg-color: #f5f7fa;
@@ -56,6 +57,7 @@
             --btn-active-text: #ffffff;
             --title-color: #1e3a8a; /* 正常模式：深藍色 */
             --link-color: #2563eb;
+            --modal-bg: #ffffff;
         }
         :root {
             --bg-color: #f5f7fa;
@@ -74,6 +76,7 @@
             --btn-active-text: #ffffff;
             --title-color: #1e3a8a;
             --link-color: #2563eb;
+            --modal-bg: #ffffff;
         }
 
         * {
@@ -140,18 +143,23 @@
         .today-banner {
             background: linear-gradient(135deg, #1e40af, #3b82f6);
             color: white;
-            padding: 16px;
+            padding: 18px 16px;
             border-radius: 12px;
             text-align: center;
             margin-bottom: 16px;
         }
-        .today-banner .title { font-size: 0.9rem; opacity: 0.9; }
-        .today-banner .number { 
-            font-size: 2.5rem; 
+        .today-banner .title { font-size: 0.95rem; opacity: 0.95; }
+        .today-banner .solar-display { 
+            font-size: 1.6rem; 
             font-weight: bold; 
-            margin: 2px 0;
+            margin: 6px 0;
+            color: #ffffff;
+        }
+        .today-banner .solar-number {
+            font-size: 2.5rem;
             color: #fef08a;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin: 0 4px;
         }
         .today-banner .date { font-size: 0.85rem; opacity: 0.85; margin-bottom: 12px; }
         
@@ -201,10 +209,13 @@
         }
         .input-group {
             display: flex;
+            align-items: center;
             gap: 8px;
+            width: 100%;
         }
         input {
             flex: 1;
+            min-width: 0; /* 防止輸入框拉開容器擠壓按鈕 */
             padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -225,6 +236,8 @@
             font-size: 0.95rem;
             cursor: pointer;
             font-weight: bold;
+            white-space: nowrap; /* 強制文字維持單行橫排 */
+            flex-shrink: 0;      /* 防止按鈕被彈性盒擠壓 */
         }
         button.action-btn:hover { background-color: var(--btn-hover); }
         
@@ -240,6 +253,73 @@
             color: #dc2626;
             font-weight: bold;
             font-size: 1.1rem;
+        }
+
+        /* 自訂 Modal 彈窗樣式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease-in-out;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-card {
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 85%;
+            max-width: 320px;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: scale(0.9);
+            transition: transform 0.2s ease-in-out;
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #f59e0b; /* 警示黃/橙色 */
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .modal-body {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            margin-bottom: 18px;
+        }
+        .modal-body p {
+            margin-bottom: 4px;
+        }
+        .modal-footer {
+            text-align: right;
+        }
+        .modal-btn {
+            background-color: var(--btn-bg);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         /* 最底下版本與開發者資訊 */
@@ -269,16 +349,15 @@
 
     <!-- 外觀模式切換按鈕區塊 -->
     <div class="theme-switcher">
-        <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 暗黑模式</button>
+        <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 深色模式</button>
         <button id="themeLight" class="theme-btn" onclick="setTheme('light')">☀️ 正常模式(白色)</button>
         <button id="themeSystem" class="theme-btn" onclick="setTheme('system')">🔄 系統預設</button>
     </div>
 
     <!-- 1. 顯示目前今日太陽日與下架日 -->
     <div class="today-banner">
-        <div class="title" id="today-banner-title">今天是 ---- 年第</div>
-        <div class="number" id="current-solar-day">--</div>
-        <div class="title">天 (太陽日)</div>
+        <div class="title" id="today-banner-title">今天是 ---- 年太陽日</div>
+        <div class="solar-display">第 <span class="solar-number" id="current-solar-day">--</span> 天</div>
         <div class="date" id="current-date-str">今日日期: ----/--/--</div>
         
         <!-- 下架日區塊 -->
@@ -302,7 +381,7 @@
     <div class="card">
         <div class="card-title">🔢 輸入太陽日 ➔ 反推日期</div>
         <div class="input-group">
-            <input type="number" id="solar-input" placeholder="請輸入 1 ~ 366" min="1" max="366">
+            <input type="number" id="solar-input" placeholder="請輸入 1 ~ 366">
             <button class="action-btn" onclick="convertSolarToDate()">反推</button>
         </div>
         <div class="result-box" id="solar-to-date-result"></div>
@@ -310,8 +389,23 @@
 
     <!-- 4. 最底下版本與開發者資訊 -->
     <div class="app-footer">
-        <div>太陽日 Ver 2.2.2</div>
+        <div>太陽日 Ver 2.2.2 Pro</div>
         <div>開發者: <a href="https://github.com/ShihYu56/Mart-DOY" target="_blank" rel="noopener noreferrer">GitHub</a>(<a href="https://shihyu56.github.io/Mart-DOY/" target="_blank" rel="noopener noreferrer">ShihYu56</a>) & Gemini</div>
+    </div>
+</div>
+
+<!-- 自訂彈窗 Modal -->
+<div id="customModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            ⚠️ 溫馨提醒！
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- 內容由 JS 動態注入 -->
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn" onclick="closeModal()">確定</button>
+        </div>
     </div>
 </div>
 
@@ -355,9 +449,28 @@
         }
     });
 
+    /* 自訂 Modal 控制 */
+    function showModal(contentHtml) {
+        document.getElementById('modalBody').innerHTML = contentHtml;
+        document.getElementById('customModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('customModal').classList.remove('active');
+    }
+
     // 判斷是否為閏年
     function isLeapYear(year) {
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    // 計算下一次閏年年份
+    function getNextLeapYear(currentYear) {
+        let nextYear = currentYear + 1;
+        while (!isLeapYear(nextYear)) {
+            nextYear++;
+        }
+        return nextYear;
     }
 
     // 取得指定日期在當年度的太陽日（積日）
@@ -390,7 +503,7 @@
             expirySolarDay += totalDays;
         }
 
-        document.getElementById('today-banner-title').innerText = `今天是 ${year} 年第`;
+        document.getElementById('today-banner-title').innerText = `今天是 ${year} 年太陽日`;
         document.getElementById('current-solar-day').innerText = todaySolarDay;
         document.getElementById('current-date-str').innerText = `今日日期: ${formatDate(today)}`;
         document.getElementById('expiry-solar-day').innerText = `第 ${expirySolarDay} 天`;
@@ -421,8 +534,40 @@
     function convertSolarToDate() {
         const solarVal = parseInt(document.getElementById('solar-input').value);
         const currentYear = new Date().getFullYear();
-        const maxDays = isLeapYear(currentYear) ? 366 : 365;
+        const isLeap = isLeapYear(currentYear);
+        const maxDays = isLeap ? 366 : 365;
 
+        // 特殊情境 1：平年輸入 366 天
+        if (!isLeap && solarVal === 366) {
+            const nextLeapYear = getNextLeapYear(currentYear);
+            showModal(`
+                <p><strong>${currentYear} 年為平年</strong>，一年只有 <strong>365 天</strong> 喔！</p>
+                <p style="margin-top: 6px; color: var(--text-sub);">🔹 下一次閏年為：<strong>${nextLeapYear} 年</strong></p>
+            `);
+            document.getElementById('solar-to-date-result').innerText = `請輸入 1 到 365 之間的數字`;
+            return;
+        }
+
+        // 特殊情境 2：輸入 367 ～ 687（火星梗）
+        if (solarVal >= 367 && solarVal <= 687) {
+            showModal(`
+                <p>地球沒有 <strong>${solarVal}</strong> 天！</p>
+                <p style="margin-top: 6px; color: var(--text-sub);">🚀 火星有 687 天地球日<br>可以搬去那邊住！</p>
+            `);
+            document.getElementById('solar-to-date-result').innerText = `請輸入 1 到 ${maxDays} 之間的數字`;
+            return;
+        }
+
+        // 特殊情境 3：輸入 688 以上（368以上扣除火星範圍）
+        if (solarVal > 687) {
+            showModal(`
+                <p>洗一洗早點睡，夢裡什麼都有！😴</p>
+            `);
+            document.getElementById('solar-to-date-result').innerText = `請輸入 1 到 ${maxDays} 之間的數字`;
+            return;
+        }
+
+        // 一般邊界與無效值檢查
         if (isNaN(solarVal) || solarVal < 1 || solarVal > maxDays) {
             document.getElementById('solar-to-date-result').innerText = `請輸入 1 到 ${maxDays} 之間的數字`;
             return;
