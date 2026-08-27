@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全聯蔬果太陽日解碼器</title>
+    <title>全聯蔬果太陽日計算器</title>
     
     <!-- PWA 與行動裝置設定 -->
     <link rel="manifest" href="manifest.json">
@@ -190,6 +190,41 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
 
+        /* 方案 C：獨立放置於卡片下方/區塊底部的常亮按鈕 */
+        .wakelock-container-c {
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: center;
+        }
+        .wakelock-btn-c {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 42px; /* 提供極佳的實體觸控按壓面積 */
+        }
+        .wakelock-btn-c:active {
+            transform: scale(0.98);
+        }
+        .wakelock-btn-c.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+        }
+
         /* 功能區塊 */
         .card {
             background: var(--card-bg);
@@ -345,7 +380,7 @@
 <body>
 
 <div class="app-container">
-    <h2>🛒 蔬果太陽日解碼器</h2>
+    <h2>🛒 蔬果太陽日計算器</h2>
 
     <!-- 外觀模式切換按鈕區塊 -->
     <div class="theme-switcher">
@@ -365,6 +400,14 @@
             <div class="expiry-title">⚠️ 今日對應下架日 (-7日)</div>
             <div class="expiry-number" id="expiry-solar-day">第 -- 天</div>
         </div>
+    </div>
+
+    <!-- 方案 C：獨立置於藍色 banner 下方的常亮按鈕區塊 -->
+    <div class="wakelock-container-c">
+        <button id="wakeLockBtn" class="wakelock-btn-c" onclick="toggleWakeLock()">
+            <span>💡</span>
+            <span class="text">螢幕保持常亮：關</span>
+        </button>
     </div>
 
     <!-- 2. 輸入日期顯示太陽日 -->
@@ -389,7 +432,7 @@
 
     <!-- 4. 最底下版本與開發者資訊 -->
     <div class="app-footer">
-        <div>太陽日 Ver 2.2.2 Pro</div>
+        <div>太陽日 Ver 2.2.2 professional</div>
         <div>開發者: <a href="https://github.com/ShihYu56/Mart-DOY" target="_blank" rel="noopener noreferrer">GitHub</a>(<a href="https://shihyu56.github.io/Mart-DOY/" target="_blank" rel="noopener noreferrer">ShihYu56</a>) & Gemini</div>
     </div>
 </div>
@@ -410,6 +453,66 @@
 </div>
 
 <script>
+    /* 螢幕常亮 Screen Wake Lock API 邏輯 */
+    let wakeLock = null;
+    let isWakeLockRequested = false;
+
+    async function toggleWakeLock() {
+        const btn = document.getElementById('wakeLockBtn');
+
+        if (wakeLock !== null) {
+            await releaseWakeLock();
+            isWakeLockRequested = false;
+            btn.classList.remove('active');
+            btn.querySelector('.text').innerText = '螢幕保持常亮：關';
+        } else {
+            isWakeLockRequested = true;
+            const success = await requestWakeLock();
+            if (success) {
+                btn.classList.add('active');
+                btn.querySelector('.text').innerText = '螢幕保持常亮：開';
+            } else {
+                alert('您的瀏覽器不支援螢幕常亮功能');
+            }
+        }
+    }
+
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => {
+                    wakeLock = null;
+                    const btn = document.getElementById('wakeLockBtn');
+                    if (btn && !isWakeLockRequested) {
+                        btn.classList.remove('active');
+                        btn.querySelector('.text').innerText = '螢幕保持常亮：關';
+                    }
+                });
+                return true;
+            } else {
+                console.warn("Wake Lock API is not supported in this browser context.");
+            }
+        } catch (err) {
+            console.log(`Wake Lock Error: ${err.message}`);
+        }
+        return false;
+    }
+
+    async function releaseWakeLock() {
+        if (wakeLock !== null) {
+            await wakeLock.release();
+            wakeLock = null;
+        }
+    }
+
+    // 使用者切回網頁時自動恢復常亮
+    document.addEventListener('visibilitychange', async () => {
+        if (isWakeLockRequested && document.visibilityState === 'visible') {
+            await requestWakeLock();
+        }
+    });
+
     /* 主題切換邏輯 */
     function setTheme(mode) {
         localStorage.setItem("solar_theme_mode", mode);
