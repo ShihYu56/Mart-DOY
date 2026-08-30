@@ -420,6 +420,8 @@
             text-decoration: none;
             color: var(--text-main);
             transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
         }
         .gemini-option-card:hover, .gemini-option-card:active {
             background-color: var(--gemini-card-hover);
@@ -435,7 +437,6 @@
             margin-top: 2px;
         }
 
-        /* 縮小字體與緊湊間距，確保縮網址完全顯示不被截斷 */
         .url-copy-card {
             background-color: var(--box-bg);
             border: 1px solid var(--border-color);
@@ -484,9 +485,10 @@
             background-color: rgba(0, 0, 0, 0.08);
         }
 
-        /* 氣泡通用樣式 */
-        .copy-tooltip, .toast-tooltip {
+        .copy-tooltip {
             position: absolute;
+            bottom: -32px;
+            right: 8px;
             background-color: #000000;
             color: #ffffff;
             font-size: 0.75rem;
@@ -500,11 +502,6 @@
             white-space: nowrap;
             z-index: 100;
         }
-        
-        .copy-tooltip {
-            bottom: -32px;
-            right: 8px;
-        }
         .copy-tooltip::before {
             content: '';
             position: absolute;
@@ -517,7 +514,6 @@
             border-bottom: 5px solid #000000;
         }
 
-        /* 全局漂浮氣泡樣式 */
         .global-toast {
             position: fixed;
             bottom: 24px;
@@ -656,7 +652,7 @@
     const GITHUB_ORIGIN_URL = "https://shihyu56.github.io/Mart-DOY/";
     const SHORT_URL = "https://tinyurl.com/MartDOY";
 
-    /* 1. 觸發原生系統分享選單 (使用 GitHub 原始網址) */
+    /* 1. 觸發原生系統分享選單 */
     async function triggerNativeShare() {
         const shareData = {
             title: '全聯蔬果太陽日計算器',
@@ -677,7 +673,7 @@
         }
     }
 
-    /* 2. 複製短網址相容性修復 (支援本地 WebView) */
+    /* 2. 複製短網址相容性修復 */
     function copyShortUrl() {
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(SHORT_URL).then(() => {
@@ -690,7 +686,6 @@
         }
     }
 
-    // 備用複製方案
     function fallbackCopyText(text) {
         const textarea = document.createElement("textarea");
         textarea.value = text;
@@ -713,7 +708,7 @@
         document.body.removeChild(textarea);
     }
 
-    /* 3. 顯示 1.64 秒「已複製！」氣泡 */
+    /* 3. 氣泡顯示控制 */
     function showCopyTooltip() {
         const tooltip = document.getElementById('copyTooltip');
         if (tooltip) {
@@ -726,7 +721,6 @@
         }
     }
 
-    /* 通用黑色彈出氣泡（顯示 1.64 秒） */
     function showGlobalToast(text) {
         const toast = document.getElementById('globalToast');
         if (toast) {
@@ -765,7 +759,6 @@
         element.addEventListener('mouseup', cancel);
         element.addEventListener('mouseleave', cancel);
 
-        // 防止長按觸發短按事件
         element.addEventListener('click', (e) => {
             if (isLongPress) {
                 e.stopImmediatePropagation();
@@ -881,7 +874,25 @@
         document.getElementById('customModal').classList.remove('active');
     }
 
-    /* 7. 點擊 Gemini 彈出專屬介紹彈窗 (支援 WebView / PWA 外開瀏覽器相容性) */
+    /* 7. 下載 Gemini 時依據裝置系統跳轉相應 App 商店/網址 */
+    function downloadGeminiByPlatform() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+
+        // 判斷 iOS (iPhone / iPad / iPod)
+        if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+            window.open('https://apps.apple.com/tw/app/google/id284815942', '_blank');
+        } 
+        // 判斷 Android
+        else if (/android/i.test(ua)) {
+            window.open('https://play.google.com/store/apps/details?id=com.google.android.apps.bard', '_blank');
+        } 
+        // 其他系統 (Windows / macOS 等) 引導至 Gemini 網頁版
+        else {
+            window.open('https://gemini.google.com/', '_blank');
+        }
+    }
+
+    /* 8. 點擊 Gemini 彈出專屬介紹彈窗 (新增「下載 Gemini App」選單) */
     function openGeminiModal() {
         const geminiTitle = `
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -902,17 +913,24 @@
 
         const geminiContent = `
             <div class="gemini-modal-container">
-                <div onclick="openExternalUrl('https://blog.google/intl/zh-tw/products/explore-get-answers/2023_12_google-gemini/')" class="gemini-option-card" style="cursor: pointer;">
+                <a href="https://blog.google/intl/zh-tw/products/explore-get-answers/2023_12_google-gemini/" target="_blank" rel="noopener noreferrer" class="gemini-option-card">
                     <div>
                         <div class="gemini-option-title">何謂 Gemini</div>
                         <div class="gemini-option-desc">探索 Google 最強大的多模態 AI 模型</div>
                     </div>
                     <span style="color: var(--text-sub); font-size: 1.1rem;">➔</span>
-                </div>
-                <div onclick="openExternalUrl('https://gemini.google.com/app?hl=zh-TW')" class="gemini-option-card" style="cursor: pointer;">
+                </a>
+                <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="gemini-option-card">
                     <div>
                         <div class="gemini-option-title">啟用 Gemini</div>
                         <div class="gemini-option-desc">立即體驗 AI 智慧對話與協助工具</div>
+                    </div>
+                    <span style="color: var(--text-sub); font-size: 1.1rem;">➔</span>
+                </a>
+                <div class="gemini-option-card" onclick="downloadGeminiByPlatform()">
+                    <div>
+                        <div class="gemini-option-title">下載 Gemini App</div>
+                        <div class="gemini-option-desc">自動判斷裝置跳轉至應用程式商店</div>
                     </div>
                     <span style="color: var(--text-sub); font-size: 1.1rem;">➔</span>
                 </div>
@@ -922,25 +940,7 @@
         showModal(geminiContent, geminiTitle);
     }
 
-    /* 強制喚醒系統外部預設瀏覽器（相容 Android Intent / WebView / iOS PWA） */
-    function openExternalUrl(url) {
-        const isAndroid = /Android/i.test(navigator.userAgent);
-        
-        if (isAndroid) {
-            // Android 最佳解：構造 Intent 網址強制交給外部分頁或預設瀏覽器（Chrome）處理，避開 WebView 攔截
-            const cleanUrl = url.replace(/^https?:\/\//, '');
-            const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
-            window.location.href = intentUrl;
-        } else {
-            // 一般瀏覽器或 iOS：使用 _system / _blank 嘗試新視窗開啟
-            const newWin = window.open(url, '_system') || window.open(url, '_blank');
-            if (!newWin) {
-                window.location.href = url;
-            }
-        }
-    }
-
-    /* 8. 點擊 🛒 圖示彈出分享 QR Code */
+    /* 9. 點擊 🛒 圖示彈出分享 QR Code */
     function openShareModal() {
         const modalContent = `
             <div style="text-align: center;">
@@ -972,14 +972,13 @@
         }, 60);
     }
 
-    /* 9. 依據本地環境 (window.location.href) 動態繪製 QR Code (推車圖示鏡像 180 度) */
+    /* 10. 繪製 QR Code */
     function renderCartQRCode() {
         const container = document.getElementById('qrcode-modal-box');
         if (!container) return;
         
         container.innerHTML = '';
 
-        // 推車 SVG 加入 transform="scale(-1, 1)" 進行 180 度水平鏡像翻轉
         const cartSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%231e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="scale(-1, 1)" transform-origin="center"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`;
 
         const currentEnvUrl = window.location.href;
