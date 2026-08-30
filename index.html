@@ -881,7 +881,7 @@
         document.getElementById('customModal').classList.remove('active');
     }
 
-    /* 7. 點擊 Gemini 彈出專屬介紹彈窗 (嵌入精確彩色漸層圖示) */
+    /* 7. 點擊 Gemini 彈出專屬介紹彈窗 (支援 WebView / PWA 外開瀏覽器相容性) */
     function openGeminiModal() {
         const geminiTitle = `
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -902,24 +902,42 @@
 
         const geminiContent = `
             <div class="gemini-modal-container">
-                <a href="https://blog.google/intl/zh-tw/products/explore-get-answers/2023_12_google-gemini/" target="_blank" rel="noopener noreferrer" class="gemini-option-card">
+                <div onclick="openExternalUrl('https://blog.google/intl/zh-tw/products/explore-get-answers/2023_12_google-gemini/')" class="gemini-option-card" style="cursor: pointer;">
                     <div>
                         <div class="gemini-option-title">何謂 Gemini</div>
                         <div class="gemini-option-desc">探索 Google 最強大的多模態 AI 模型</div>
                     </div>
                     <span style="color: var(--text-sub); font-size: 1.1rem;">➔</span>
-                </a>
-                <a href="https://gemini.google.com/app?hl=zh-TW" target="_blank" rel="noopener noreferrer" class="gemini-option-card">
+                </div>
+                <div onclick="openExternalUrl('https://gemini.google.com/app?hl=zh-TW')" class="gemini-option-card" style="cursor: pointer;">
                     <div>
                         <div class="gemini-option-title">啟用 Gemini</div>
                         <div class="gemini-option-desc">立即體驗 AI 智慧對話與協助工具</div>
                     </div>
                     <span style="color: var(--text-sub); font-size: 1.1rem;">➔</span>
-                </a>
+                </div>
             </div>
         `;
 
         showModal(geminiContent, geminiTitle);
+    }
+
+    /* 強制喚醒系統外部預設瀏覽器（相容 Android Intent / WebView / iOS PWA） */
+    function openExternalUrl(url) {
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        
+        if (isAndroid) {
+            // Android 最佳解：構造 Intent 網址強制交給外部分頁或預設瀏覽器（Chrome）處理，避開 WebView 攔截
+            const cleanUrl = url.replace(/^https?:\/\//, '');
+            const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+            window.location.href = intentUrl;
+        } else {
+            // 一般瀏覽器或 iOS：使用 _system / _blank 嘗試新視窗開啟
+            const newWin = window.open(url, '_system') || window.open(url, '_blank');
+            if (!newWin) {
+                window.location.href = url;
+            }
+        }
     }
 
     /* 8. 點擊 🛒 圖示彈出分享 QR Code */
