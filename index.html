@@ -19,6 +19,9 @@
     <meta name="theme-color" content="#121212">
     <meta name="mobile-web-app-capable" content="yes">
 
+    <!-- QR Code 生成套件 -->
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+
     <style>
         /* 主題變數定義 */
         :root.dark {
@@ -36,9 +39,12 @@
             --switcher-bg: #2a2a2a;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
-            --title-color: #60a5fa; /* 深色模式：亮天藍色 */
+            --title-color: #60a5fa;
             --link-color: #60a5fa;
             --modal-bg: #2a2a2a;
+            --box-bg: #121212;
+            --gemini-card-bg: #25282e;
+            --gemini-card-hover: #31353e;
         }
         :root.light {
             --bg-color: #f5f7fa;
@@ -55,9 +61,12 @@
             --switcher-bg: #f1f5f9;
             --btn-active-bg: #2563eb;
             --btn-active-text: #ffffff;
-            --title-color: #1e3a8a; /* 正常模式：深藍色 */
+            --title-color: #1e3a8a;
             --link-color: #2563eb;
             --modal-bg: #ffffff;
+            --box-bg: #f1f5f9;
+            --gemini-card-bg: #f1f5f9;
+            --gemini-card-hover: #e2e8f0;
         }
         :root {
             --bg-color: #f5f7fa;
@@ -77,6 +86,9 @@
             --title-color: #1e3a8a;
             --link-color: #2563eb;
             --modal-bg: #ffffff;
+            --box-bg: #f1f5f9;
+            --gemini-card-bg: #f1f5f9;
+            --gemini-card-hover: #e2e8f0;
         }
 
         * {
@@ -101,15 +113,49 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             padding: 20px;
             transition: background-color 0.25s;
+            position: relative;
         }
         h2 {
             text-align: center;
             font-size: 1.3rem;
-            color: var(--title-color); /* 自動隨主題套用色彩 */
+            color: var(--title-color);
             margin-bottom: 12px;
+            padding-right: 28px;
+            padding-left: 28px;
         }
 
-        /* 外觀模式切換按鈕區塊 */
+        .share-header-btn {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: transparent;
+            border: none;
+            color: var(--title-color);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: transform 0.15s ease, background-color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .share-header-btn:active {
+            transform: scale(1.15);
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .cart-icon-btn {
+            cursor: pointer;
+            user-select: none;
+            display: inline-block;
+            transition: transform 0.15s ease;
+        }
+        .cart-icon-btn:active {
+            transform: scale(1.2);
+        }
+
         .theme-switcher {
             display: flex;
             gap: 4px;
@@ -139,7 +185,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
 
-        /* 今日狀態欄 (藍框) */
         .today-banner {
             background: linear-gradient(135deg, #1e40af, #3b82f6);
             color: white;
@@ -163,7 +208,6 @@
         }
         .today-banner .date { font-size: 0.85rem; opacity: 0.85; margin-bottom: 12px; }
         
-        /* 下架日區塊 */
         .expiry-box {
             background: rgba(255, 255, 255, 0.18);
             border-radius: 10px;
@@ -190,7 +234,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
 
-        /* 方案 C：獨立放置於卡片下方/區塊底部的常亮按鈕 */
         .wakelock-container-c {
             margin-bottom: 16px;
             display: flex;
@@ -213,7 +256,7 @@
             transition: all 0.2s ease;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
-            min-height: 42px; /* 提供極佳的實體觸控按壓面積 */
+            min-height: 42px;
         }
         .wakelock-btn-c:active {
             transform: scale(0.98);
@@ -225,7 +268,6 @@
             box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
         }
 
-        /* 功能區塊 */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -250,7 +292,7 @@
         }
         input {
             flex: 1;
-            min-width: 0; /* 防止輸入框拉開容器擠壓按鈕 */
+            min-width: 0;
             padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -271,12 +313,11 @@
             font-size: 0.95rem;
             cursor: pointer;
             font-weight: bold;
-            white-space: nowrap; /* 強制文字維持單行橫排 */
-            flex-shrink: 0;      /* 防止按鈕被彈性盒擠壓 */
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         button.action-btn:hover { background-color: var(--btn-hover); }
         
-        /* 結果顯示 */
         .result-box {
             margin-top: 10px;
             font-size: 0.95rem;
@@ -295,7 +336,6 @@
             font-size: 1.1rem;
         }
 
-        /* 自訂 Modal 彈窗樣式 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -319,7 +359,7 @@
             background: var(--modal-bg);
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            width: 85%;
+            width: 88%;
             max-width: 320px;
             border-radius: 16px;
             padding: 20px;
@@ -333,7 +373,7 @@
         .modal-header {
             font-size: 1.1rem;
             font-weight: bold;
-            color: #f59e0b; /* 警示黃/橙色 */
+            color: #f59e0b;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
@@ -362,7 +402,144 @@
             cursor: pointer;
         }
 
-        /* 最底下版本與開發者資訊 */
+        /* Gemini 彈窗風格樣式 */
+        .gemini-modal-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .gemini-option-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--gemini-card-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+        .gemini-option-card:hover, .gemini-option-card:active {
+            background-color: var(--gemini-card-hover);
+            transform: translateY(-1px);
+        }
+        .gemini-option-title {
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+        .gemini-option-desc {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        /* 縮小字體與緊湊間距，確保縮網址完全顯示不被截斷 */
+        .url-copy-card {
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 10px;
+            margin-top: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            position: relative;
+        }
+        .url-text-group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.81rem;
+            white-space: nowrap;
+        }
+        .url-text-group .label {
+            color: var(--text-sub);
+            flex-shrink: 0;
+        }
+        .url-text-group .link {
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: -0.2px;
+        }
+        .copy-icon-btn-clean {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background-color 0.2s, transform 0.1s;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .copy-icon-btn-clean:active {
+            transform: scale(1.15);
+            background-color: rgba(0, 0, 0, 0.08);
+        }
+
+        /* 氣泡通用樣式 */
+        .copy-tooltip, .toast-tooltip {
+            position: absolute;
+            background-color: #000000;
+            color: #ffffff;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .copy-tooltip {
+            bottom: -32px;
+            right: 8px;
+        }
+        .copy-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            right: 10px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid #000000;
+        }
+
+        /* 全局漂浮氣泡樣式 */
+        .global-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #000000;
+            color: #ffffff;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 2000;
+        }
+        .global-toast.show, .copy-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .app-footer {
             text-align: center;
             font-size: 0.75rem;
@@ -371,6 +548,7 @@
             margin-bottom: 4px;
             letter-spacing: 0.5px;
             line-height: 1.6;
+            user-select: none;
         }
         .app-footer a {
             color: var(--link-color);
@@ -380,34 +558,54 @@
         .app-footer a:hover {
             text-decoration: underline;
         }
+        .gemini-click-link {
+            color: var(--link-color);
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            gap: 3px;
+        }
+        .gemini-click-link:hover {
+            text-decoration: underline;
+        }
+        .gemini-click-link svg {
+            display: block;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <h2>🛒 蔬果太陽日計算器</h2>
+    <button class="share-header-btn" id="shareHeaderBtn" onclick="triggerNativeShare()" aria-label="分享頁面" title="分享此 App">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+        </svg>
+    </button>
 
-    <!-- 外觀模式切換按鈕區塊 -->
+    <h2>
+        <span class="cart-icon-btn" onclick="openShareModal()" title="點擊生成分享 QR Code">🛒</span> 
+        蔬果太陽日計算器
+    </h2>
+
     <div class="theme-switcher">
         <button id="themeDark" class="theme-btn" onclick="setTheme('dark')">🌙 深色模式</button>
         <button id="themeLight" class="theme-btn" onclick="setTheme('light')">☀️ 正常模式(白色)</button>
         <button id="themeSystem" class="theme-btn" onclick="setTheme('system')">🔄 系統預設</button>
     </div>
 
-    <!-- 1. 顯示目前今日太陽日與下架日 -->
     <div class="today-banner">
         <div class="title" id="today-banner-title">今天是 ---- 年太陽日</div>
         <div class="solar-display">第 <span class="solar-number" id="current-solar-day">--</span> 天</div>
         <div class="date" id="current-date-str">今日日期: ----/--/--</div>
         
-        <!-- 下架日區塊 -->
         <div class="expiry-box">
             <div class="expiry-title">⚠️ 今日對應下架日 (-7日)</div>
             <div class="expiry-number" id="expiry-solar-day">第 -- 天</div>
         </div>
     </div>
 
-    <!-- 方案 C：獨立置於藍色 banner 下方的常亮按鈕區塊 -->
     <div class="wakelock-container-c">
         <button id="wakeLockBtn" class="wakelock-btn-c" onclick="toggleWakeLock()">
             <span>💡</span>
@@ -415,7 +613,6 @@
         </button>
     </div>
 
-    <!-- 2. 輸入日期顯示太陽日 -->
     <div class="card">
         <div class="card-title">📅 輸入日期 ➔ 查太陽日</div>
         <div class="input-group">
@@ -425,7 +622,6 @@
         <div class="result-box" id="date-to-solar-result"></div>
     </div>
 
-    <!-- 3. 輸入太陽日顯示日期 -->
     <div class="card">
         <div class="card-title">🔢 輸入太陽日 ➔ 反推日期</div>
         <div class="input-group">
@@ -435,21 +631,18 @@
         <div class="result-box" id="solar-to-date-result"></div>
     </div>
 
-    <!-- 4. 最底下版本與開發者資訊 -->
     <div class="app-footer">
-        <div>太陽日 Ver 2.2.2.2 professional</div>
-        <div>開發者: <a href="https://github.com/ShihYu56/Mart-DOY" target="_blank" rel="noopener noreferrer">GitHub</a>(<a href="https://shihyu56.github.io/Mart-DOY/" target="_blank" rel="noopener noreferrer">ShihYu56</a>) & Gemini</div>
+        <div>太陽日 Ver 2.6.08.31 professional</div>
+        <div><span id="devText">開發者</span>: <a href="https://github.com/ShihYu56/Mart-DOY" target="_blank" rel="noopener noreferrer">GitHub</a>(<a href="https://shihyu56.github.io/Mart-DOY/" target="_blank" rel="noopener noreferrer">ShihYu56</a>) & <span class="gemini-click-link" onclick="openGeminiModal()"><svg width="14" height="14" viewBox="0 0 200 200"><defs><linearGradient id="gemini-icon-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FF3A3A"/><stop offset="35%" stop-color="#3B82F6"/><stop offset="70%" stop-color="#10B981"/><stop offset="100%" stop-color="#FBBF24"/></linearGradient></defs><path d="M 100,0 Q 100,100 200,100 Q 100,100 100,200 Q 100,100 0,100 Q 100,100 100,0 Z" fill="url(#gemini-icon-grad)"/></svg>Gemini</span></div>
     </div>
 </div>
 
-<!-- 自訂彈窗 Modal -->
 <div id="customModal" class="modal-overlay">
     <div class="modal-card">
-        <div class="modal-header">
+        <div class="modal-header" id="modalHeader">
             ⚠️ 溫馨提醒！
         </div>
         <div class="modal-body" id="modalBody">
-            <!-- 內容由 JS 動態注入 -->
         </div>
         <div class="modal-footer">
             <button class="modal-btn" onclick="closeModal()">確定</button>
@@ -457,8 +650,131 @@
     </div>
 </div>
 
+<div id="globalToast" class="global-toast"></div>
+
 <script>
-    /* 螢幕常亮 Screen Wake Lock API 邏輯 */
+    const GITHUB_ORIGIN_URL = "https://shihyu56.github.io/Mart-DOY/";
+    const SHORT_URL = "https://tinyurl.com/MartDOY";
+
+    /* 1. 觸發原生系統分享選單 (使用 GitHub 原始網址) */
+    async function triggerNativeShare() {
+        const shareData = {
+            title: '全聯蔬果太陽日計算器',
+            text: '快速查詢與反推全聯蔬果太陽日與對應下架日！',
+            url: GITHUB_ORIGIN_URL
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('分享失敗:', err);
+                }
+            }
+        } else {
+            copyShortUrl();
+        }
+    }
+
+    /* 2. 複製短網址相容性修復 (支援本地 WebView) */
+    function copyShortUrl() {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(SHORT_URL).then(() => {
+                showCopyTooltip();
+            }).catch(() => {
+                fallbackCopyText(SHORT_URL);
+            });
+        } else {
+            fallbackCopyText(SHORT_URL);
+        }
+    }
+
+    // 備用複製方案
+    function fallbackCopyText(text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showCopyTooltip();
+            } else {
+                showModal('<p>請手動複製網址：<br><strong>' + SHORT_URL + '</strong></p>', '📱 分享連結');
+            }
+        } catch (err) {
+            showModal('<p>請手動複製網址：<br><strong>' + SHORT_URL + '</strong></p>', '📱 分享連結');
+        }
+        document.body.removeChild(textarea);
+    }
+
+    /* 3. 顯示 1.64 秒「已複製！」氣泡 */
+    function showCopyTooltip() {
+        const tooltip = document.getElementById('copyTooltip');
+        if (tooltip) {
+            tooltip.classList.add('show');
+            setTimeout(() => {
+                tooltip.classList.remove('show');
+            }, 1640);
+        } else {
+            showGlobalToast("已複製！");
+        }
+    }
+
+    /* 通用黑色彈出氣泡（顯示 1.64 秒） */
+    function showGlobalToast(text) {
+        const toast = document.getElementById('globalToast');
+        if (toast) {
+            toast.innerText = text;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 1640);
+        }
+    }
+
+    /* 長按事件輔助函式 */
+    function setupLongPress(element, callback) {
+        let timer = null;
+        let isLongPress = false;
+
+        const start = (e) => {
+            isLongPress = false;
+            timer = setTimeout(() => {
+                isLongPress = true;
+                callback(e);
+            }, 500);
+        };
+
+        const cancel = () => {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+        };
+
+        element.addEventListener('touchstart', start, { passive: true });
+        element.addEventListener('touchend', cancel);
+        element.addEventListener('touchmove', cancel);
+        element.addEventListener('mousedown', start);
+        element.addEventListener('mouseup', cancel);
+        element.addEventListener('mouseleave', cancel);
+
+        // 防止長按觸發短按事件
+        element.addEventListener('click', (e) => {
+            if (isLongPress) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+            }
+        }, true);
+    }
+
+    /* 4. 螢幕常亮 Screen Wake Lock API 邏輯 */
     let wakeLock = null;
     let isWakeLockRequested = false;
 
@@ -495,8 +811,6 @@
                     }
                 });
                 return true;
-            } else {
-                console.warn("Wake Lock API is not supported in this browser context.");
             }
         } catch (err) {
             console.log(`Wake Lock Error: ${err.message}`);
@@ -511,14 +825,13 @@
         }
     }
 
-    // 使用者切回網頁時自動恢復常亮
     document.addEventListener('visibilitychange', async () => {
         if (isWakeLockRequested && document.visibilityState === 'visible') {
             await requestWakeLock();
         }
     });
 
-    /* 主題切換邏輯 */
+    /* 5. 主題切換邏輯 */
     function setTheme(mode) {
         localStorage.setItem("solar_theme_mode", mode);
         applyTheme(mode);
@@ -557,8 +870,9 @@
         }
     });
 
-    /* 自訂 Modal 控制 */
-    function showModal(contentHtml) {
+    /* 6. 自訂 Modal 控制 */
+    function showModal(contentHtml, titleText = "⚠️ 溫馨提醒！") {
+        document.getElementById('modalHeader').innerHTML = titleText;
         document.getElementById('modalBody').innerHTML = contentHtml;
         document.getElementById('customModal').classList.add('active');
     }
@@ -567,12 +881,121 @@
         document.getElementById('customModal').classList.remove('active');
     }
 
-    // 判斷是否為閏年
+    /* 7. 點擊 Gemini 彈出專屬介紹彈窗 (嵌入精確彩色漸層圖示) */
+    function openGeminiModal() {
+        const geminiTitle = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <svg width="22" height="22" viewBox="0 0 200 200">
+                    <defs>
+                        <linearGradient id="gemini-title-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FF3A3A"/>
+                            <stop offset="35%" stop-color="#3B82F6"/>
+                            <stop offset="70%" stop-color="#10B981"/>
+                            <stop offset="100%" stop-color="#FBBF24"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M 100,0 Q 100,100 200,100 Q 100,100 100,200 Q 100,100 0,100 Q 100,100 100,0 Z" fill="url(#gemini-title-grad)"/>
+                </svg>
+                <span style="background: linear-gradient(90deg, #FF3A3A, #3B82F6, #10B981, #FBBF24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">關於 Gemini</span>
+            </div>
+        `;
+
+        const geminiContent = `
+            <div class="gemini-modal-container">
+                <a href="https://blog.google/intl/zh-tw/products/explore-get-answers/2023_12_google-gemini/" target="_blank" rel="noopener noreferrer" class="gemini-option-card">
+                    <div>
+                        <div class="gemini-option-title">何謂 Gemini</div>
+                        <div class="gemini-option-desc">探索 Google 最強大的多模態 AI 模型</div>
+                    </div>
+                    <span style="color: var(--text-sub); font-size: 1.1rem;">➔</span>
+                </a>
+                <a href="https://gemini.google.com/app?hl=zh-TW" target="_blank" rel="noopener noreferrer" class="gemini-option-card">
+                    <div>
+                        <div class="gemini-option-title">啟用 Gemini</div>
+                        <div class="gemini-option-desc">立即體驗 AI 智慧對話與協助工具</div>
+                    </div>
+                    <span style="color: var(--text-sub); font-size: 1.1rem;">➔</span>
+                </a>
+            </div>
+        `;
+
+        showModal(geminiContent, geminiTitle);
+    }
+
+    /* 8. 點擊 🛒 圖示彈出分享 QR Code */
+    function openShareModal() {
+        const modalContent = `
+            <div style="text-align: center;">
+                <p style="margin-bottom: 8px; font-weight: bold; font-size: 0.95rem; color: var(--text-main);">手機相機掃描即可開啟</p>
+                <div id="qrcode-modal-box" style="display: flex; justify-content: center; margin: 12px 0;"></div>
+                
+                <div class="url-copy-card">
+                    <div class="url-text-group">
+                        <span class="label">縮網址：</span>
+                        <span class="link">${SHORT_URL}</span>
+                    </div>
+                    <button class="copy-icon-btn-clean" onclick="copyShortUrl()" title="複製網址">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                    <div id="copyTooltip" class="copy-tooltip">已複製！</div>
+                </div>
+
+                <p style="font-size: 0.8rem; color: var(--text-sub);">快將這個工具分享給需要的人吧！</p>
+            </div>
+        `;
+        
+        showModal(modalContent, "📱 分享此網頁小工具(app)");
+
+        setTimeout(() => {
+            renderCartQRCode();
+        }, 60);
+    }
+
+    /* 9. 依據本地環境 (window.location.href) 動態繪製 QR Code (推車圖示鏡像 180 度) */
+    function renderCartQRCode() {
+        const container = document.getElementById('qrcode-modal-box');
+        if (!container) return;
+        
+        container.innerHTML = '';
+
+        // 推車 SVG 加入 transform="scale(-1, 1)" 進行 180 度水平鏡像翻轉
+        const cartSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%231e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="scale(-1, 1)" transform-origin="center"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`;
+
+        const currentEnvUrl = window.location.href;
+
+        const qrCode = new QRCodeStyling({
+            width: 180,
+            height: 180,
+            type: "canvas",
+            data: currentEnvUrl,
+            image: cartSvg,
+            imageOptions: {
+                hideBackgroundDots: true,
+                imageSize: 0.28,
+                margin: 3
+            },
+            dotsOptions: {
+                color: "#1e3a8a",
+                type: "rounded"
+            },
+            backgroundOptions: {
+                color: "#ffffff"
+            },
+            qrOptions: {
+                errorCorrectionLevel: "H"
+            }
+        });
+
+        qrCode.append(container);
+    }
+
     function isLeapYear(year) {
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
     }
 
-    // 計算下一次閏年年份
     function getNextLeapYear(currentYear) {
         let nextYear = currentYear + 1;
         while (!isLeapYear(nextYear)) {
@@ -581,7 +1004,6 @@
         return nextYear;
     }
 
-    // 取得指定日期在當年度的太陽日（積日）
     function getSolarDay(date) {
         const start = new Date(date.getFullYear(), 0, 1);
         const diff = date - start;
@@ -589,7 +1011,6 @@
         return Math.floor(diff / oneDay) + 1;
     }
 
-    // 格式化日期為 YYYY-MM-DD
     function formatDate(date) {
         const yyyy = date.getFullYear();
         const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -597,7 +1018,6 @@
         return `${yyyy}-${mm}-${dd}`;
     }
 
-    // 初始化頁面
     window.onload = function() {
         loadTheme();
 
@@ -617,9 +1037,24 @@
         document.getElementById('expiry-solar-day').innerText = `第 ${expirySolarDay} 天`;
         
         document.getElementById('date-input').value = formatDate(today);
+
+        // 設定長按「開發者」顯示「順興」氣泡
+        const devBtn = document.getElementById('devText');
+        if (devBtn) {
+            setupLongPress(devBtn, () => {
+                showGlobalToast("順興");
+            });
+        }
+
+        // 設定長按右上角「分享icon」顯示「分享」氣泡
+        const shareBtn = document.getElementById('shareHeaderBtn');
+        if (shareBtn) {
+            setupLongPress(shareBtn, () => {
+                showGlobalToast("分享");
+            });
+        }
     };
 
-    // 功能一：日期 ➔ 太陽日
     function convertDateToSolar() {
         const inputVal = document.getElementById('date-input').value;
         if (!inputVal) {
@@ -639,14 +1074,12 @@
             `<span class="result-subtext">(下架日: 第 ${targetExpiry} 天)</span>`;
     }
 
-    // 功能二：太陽日 ➔ 日期
     function convertSolarToDate() {
         const solarVal = parseInt(document.getElementById('solar-input').value);
         const currentYear = new Date().getFullYear();
         const isLeap = isLeapYear(currentYear);
         const maxDays = isLeap ? 366 : 365;
 
-        // 特殊情境 1：平年輸入 366 天
         if (!isLeap && solarVal === 366) {
             const nextLeapYear = getNextLeapYear(currentYear);
             showModal(`
@@ -657,7 +1090,6 @@
             return;
         }
 
-        // 特殊情境 2：輸入 367 ～ 687（火星梗）
         if (solarVal >= 367 && solarVal <= 687) {
             showModal(`
                 <p>地球沒有 <strong>${solarVal}</strong> 天！</p>
@@ -667,7 +1099,6 @@
             return;
         }
 
-        // 特殊情境 3：輸入 688 以上（368以上扣除火星範圍）
         if (solarVal > 687) {
             showModal(`
                 <p>洗一洗早點睡，夢裡什麼都有！😴</p>
@@ -676,7 +1107,6 @@
             return;
         }
 
-        // 一般邊界與無效值檢查
         if (isNaN(solarVal) || solarVal < 1 || solarVal > maxDays) {
             document.getElementById('solar-to-date-result').innerText = `請輸入 1 到 ${maxDays} 之間的數字`;
             return;
